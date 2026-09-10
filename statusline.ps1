@@ -150,8 +150,7 @@ $line1Parts = @($modelPart, $dirPart, $gitPart)
 if ($sessionPart) { $line1Parts += $sessionPart }
 if ($costPart) { $line1Parts += $costPart }
 if ($diffPart) { $line1Parts += $diffPart }
-if ($elapsedPart) { $line1Parts += $elapsedPart }
-$line1Parts += $clockPart
+# Time removed per user request
 $line1 = ($line1Parts -join $C_SEP)
 
 # --- LINE 2: Context Window & Rate Limits ---
