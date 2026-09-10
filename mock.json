@@ -1,0 +1,16 @@
+{
+  "model": "claude-3-5-sonnet-20241022",
+  "cwd": "~/projects/test",
+  "cost": {
+    "total_cost_usd": 1.25,
+    "total_duration_ms": 1500,
+    "total_lines_added": 15,
+    "total_lines_removed": 5
+  },
+  "context_window": 8500,
+  "rate_limits": {
+    "five_hour": 100,
+    "seven_day": 1000,
+    "spend_limit": 50.00
+  }
+}
