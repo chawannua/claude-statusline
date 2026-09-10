@@ -99,7 +99,7 @@ if ($effort) {
 
 $modelSummary = ""
 if ($summaryItems.Count -gt 0) {
-    $modelSummary = " ${C_MUTED}($($summaryItems -join ' · '))${RESET}"
+    $modelSummary = " ${C_MUTED}($($summaryItems -join " $GLYPH_SEP "))${RESET}"
 }
 $modelPart = "${C_CLAUDE}${GLYPH_CLAUDE} ${C_WHITE}${BOLD}${modelName}${RESET}${modelSummary}"
 
