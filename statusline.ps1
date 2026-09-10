@@ -27,7 +27,6 @@ $GLYPH_CLAUDE = [char]0x25C6  # ◆
 $GLYPH_SEP    = [char]0x00B7  # ·
 $GLYPH_BAR    = [char]0x2501  # ━
 $GLYPH_GIT    = [char]0x2387  # ⎇
-$GLYPH_CLK    = [char]0x23F1  # ⏱
 
 $C_SEP = " ${C_MUTED}${GLYPH_SEP}${RESET} "
 
@@ -51,7 +50,7 @@ function Get-Bar([double]$pct, [int]$width = 10, $activeColor = $C_CLAUDE) {
     return "${col}${fStr}${C_DARK}${eStr}${RESET}"
 }
 
-# 1. Model
+# 1. Model & Reasoning Effort
 $modelName = "Claude"
 if ($payload.model -is [string]) {
     $modelName = $payload.model
@@ -59,9 +58,48 @@ if ($payload.model -is [string]) {
     if ($payload.model.display_name) { $modelName = $payload.model.display_name }
     elseif ($payload.model.id) { $modelName = $payload.model.id }
 }
-$modelSummary = ""
+
+# Extract Effort Level from payload or settings.json
+$effort = ""
+if ($payload.effort) { $effort = [string]$payload.effort }
+elseif ($payload.model -is [psobject] -and $payload.model.effort) { $effort = [string]$payload.model.effort }
+elseif ($payload.model -is [psobject] -and $payload.model.effort_level) { $effort = [string]$payload.model.effort_level }
+
+$homeDir = $env:USERPROFILE
+if (-not $effort -and $homeDir) {
+    try {
+        $settingsPath = Join-Path $homeDir ".claude\settings.json"
+        if (Test-Path $settingsPath) {
+            $sData = Get-Content -Raw $settingsPath | ConvertFrom-Json
+            if ($sData.modelSettings) {
+                foreach ($prop in $sData.modelSettings.PSObject.Properties) {
+                    if ($prop.Value.effortLevel) {
+                        $effort = [string]$prop.Value.effortLevel
+                        break
+                    }
+                }
+            }
+        }
+    } catch {}
+}
+
+$paramText = ""
 if ($payload.model -is [psobject] -and $payload.model.param_summary) {
-    $modelSummary = " ${C_MUTED}($($payload.model.param_summary))${RESET}"
+    $paramText = [string]$payload.model.param_summary
+}
+
+$summaryItems = @()
+if ($paramText) { $summaryItems += $paramText }
+if ($effort) {
+    $capEffort = (Get-Culture).TextInfo.ToTitleCase($effort.ToLower())
+    if ($paramText -notmatch $capEffort) {
+        $summaryItems += "$capEffort Effort"
+    }
+}
+
+$modelSummary = ""
+if ($summaryItems.Count -gt 0) {
+    $modelSummary = " ${C_MUTED}($($summaryItems -join ' · '))${RESET}"
 }
 $modelPart = "${C_CLAUDE}${GLYPH_CLAUDE} ${C_WHITE}${BOLD}${modelName}${RESET}${modelSummary}"
 
@@ -70,7 +108,6 @@ $workDir = ""
 if ($payload.workspace -and $payload.workspace.current_dir) { $workDir = $payload.workspace.current_dir }
 elseif ($payload.cwd) { $workDir = $payload.cwd }
 
-$homeDir = $env:USERPROFILE
 $dirDisplay = "workspace"
 if ($workDir) {
     if ($homeDir -and $workDir.StartsWith($homeDir, [System.StringComparison]::OrdinalIgnoreCase)) {
@@ -126,31 +163,11 @@ if ($payload.cost -and ($null -ne $payload.cost.total_lines_added -or $null -ne 
     }
 }
 
-# 7. Duration / Elapsed Time
-$elapsedPart = ""
-if ($payload.cost -and $payload.cost.total_duration_ms) {
-    $durSec = [math]::Floor([double]$payload.cost.total_duration_ms / 1000.0)
-    $m = [math]::Floor($durSec / 60)
-    $s = $durSec % 60
-    $elapsedPart = "${C_MUTED}${GLYPH_CLK} ${m}m${s}s${RESET}"
-} elseif ($payload.transcript_path -and (Test-Path $payload.transcript_path)) {
-    try {
-        $tFile = Get-Item $payload.transcript_path
-        $diff = [DateTime]::UtcNow - $tFile.CreationTimeUtc
-        $m = [math]::Floor($diff.TotalMinutes)
-        $elapsedPart = "${C_MUTED}${GLYPH_CLK} ${m}m${RESET}"
-    } catch {}
-}
-
-# 8. Clock
-$clockPart = "${C_MUTED}$([DateTime]::Now.ToString('HH:mm'))${RESET}"
-
-# Build Line 1
+# Build Line 1 (Time removed per user request)
 $line1Parts = @($modelPart, $dirPart, $gitPart)
 if ($sessionPart) { $line1Parts += $sessionPart }
 if ($costPart) { $line1Parts += $costPart }
 if ($diffPart) { $line1Parts += $diffPart }
-# Time removed per user request
 $line1 = ($line1Parts -join $C_SEP)
 
 # --- LINE 2: Context Window & Rate Limits ---
