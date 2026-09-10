@@ -59,11 +59,26 @@ if ($payload.model -is [string]) {
     elseif ($payload.model.id) { $modelName = $payload.model.id }
 }
 
+function Get-EffortString($val) {
+    if ($null -eq $val) { return "" }
+    if ($val -is [string]) {
+        if ($val -match 'level=([^;}]+)') { return $matches[1].Trim() }
+        return $val.Trim()
+    }
+    if ($val -is [psobject] -or $val -is [hashtable]) {
+        if ($val.level) { return [string]$val.level }
+        if ($val.Level) { return [string]$val.Level }
+        if ($val.effort) { return [string]$val.effort }
+        if ($val.effortLevel) { return [string]$val.effortLevel }
+    }
+    return ""
+}
+
 # Extract Effort Level from payload or settings.json
 $effort = ""
-if ($payload.effort) { $effort = [string]$payload.effort }
-elseif ($payload.model -is [psobject] -and $payload.model.effort) { $effort = [string]$payload.model.effort }
-elseif ($payload.model -is [psobject] -and $payload.model.effort_level) { $effort = [string]$payload.model.effort_level }
+if ($payload.effort) { $effort = Get-EffortString $payload.effort }
+elseif ($payload.model -is [psobject] -and $payload.model.effort) { $effort = Get-EffortString $payload.model.effort }
+elseif ($payload.model -is [psobject] -and $payload.model.effort_level) { $effort = Get-EffortString $payload.model.effort_level }
 
 $homeDir = $env:USERPROFILE
 if (-not $effort -and $homeDir) {
