@@ -37,6 +37,38 @@ function Format-Number($num) {
     else { return "$num" }
 }
 
+function Get-ResetTimeStrs([int64]$unixSeconds, [bool]$is7Day) {
+    if (-not $unixSeconds) { return @{ Abs = ""; Rel = "" } }
+    $target = [DateTimeOffset]::FromUnixTimeSeconds($unixSeconds)
+    $now = [DateTimeOffset]::UtcNow
+    $diff = $target - $now
+    
+    $localTime = $target.ToLocalTime()
+    $absFmt = if ($is7Day) { 'ddd HH:mm' } else { 'HH:mm' }
+    $timeAbs = $localTime.ToString($absFmt)
+    
+    $timeRel = ""
+    if ($diff.TotalSeconds -le 0) { 
+        $timeRel = "now" 
+    } elseif ($diff.TotalMinutes -lt 1) { 
+        $timeRel = "in <1m" 
+    } else {
+        $parts = @()
+        if ($diff.Days -gt 0) {
+            $parts += "$($diff.Days)d"
+            if ($diff.Hours -gt 0) { $parts += "$($diff.Hours)h" }
+        } elseif ($diff.Hours -gt 0) {
+            $parts += "$($diff.Hours)h"
+            if ($diff.Minutes -gt 0) { $parts += "$($diff.Minutes)m" }
+        } else {
+            $parts += "$($diff.Minutes)m"
+        }
+        $timeRel = "in " + ($parts -join ' ')
+    }
+    
+    return @{ Abs = $timeAbs; Rel = $timeRel }
+}
+
 function Get-Bar([double]$pct, [int]$width = 10, $activeColor = $C_CLAUDE) {
     $p = [math]::Max(0, [math]::Min(100, $pct))
     $filled = [int][math]::Round(($p / 100.0) * $width)
@@ -228,8 +260,8 @@ if ($payload.rate_limits -and $payload.rate_limits.five_hour) {
     $cVal = if ($pct -ge 85.0) { $C_ALERT } elseif ($pct -ge 65.0) { $C_WARN } else { $C_FROST }
     $resetStr = ""
     if ($resetsAt) {
-        $localTime = [DateTimeOffset]::FromUnixTimeSeconds([int64]$resetsAt).ToLocalTime()
-        $resetStr = " ${C_MUTED}($($localTime.ToString('HH:mm')))${RESET}"
+        $rStrs = Get-ResetTimeStrs $resetsAt $false
+        $resetStr = " ${C_MUTED}($($rStrs.Abs) ${GLYPH_SEP} $($rStrs.Rel))${RESET}"
     }
     $line2Parts += "${C_MUTED}5h:${RESET} ${bar} ${cVal}$([math]::Round($pct, 1))%${RESET}${resetStr}"
 }
@@ -250,8 +282,8 @@ if ($payload.rate_limits -and $payload.rate_limits.seven_day) {
     $cVal = if ($pct -ge 85.0) { $C_ALERT } elseif ($pct -ge 65.0) { $C_WARN } else { $C_SLATE }
     $resetStr = ""
     if ($resetsAt) {
-        $localTime = [DateTimeOffset]::FromUnixTimeSeconds([int64]$resetsAt).ToLocalTime()
-        $resetStr = " ${C_MUTED}($($localTime.ToString('ddd HH:mm')))${RESET}"
+        $rStrs = Get-ResetTimeStrs $resetsAt $true
+        $resetStr = " ${C_MUTED}($($rStrs.Abs) ${GLYPH_SEP} $($rStrs.Rel))${RESET}"
     }
     $line2Parts += "${C_MUTED}7d:${RESET} ${bar} ${cVal}$([math]::Round($pct, 1))%${RESET}${resetStr}"
 }
