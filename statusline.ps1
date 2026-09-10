@@ -288,7 +288,37 @@ if ($payload.rate_limits -and $payload.rate_limits.seven_day) {
     $line2Parts += "${C_MUTED}7d:${RESET} ${bar} ${cVal}$([math]::Round($pct, 1))%${RESET}${resetStr}"
 }
 
-$line2Parts += "${C_CLAUDE}claude${RESET}"
+# Version Badge
+$claudeVersion = ""
+if ($payload.version) {
+    $claudeVersion = [string]$payload.version
+} elseif ($payload.claude_version) {
+    $claudeVersion = [string]$payload.claude_version
+}
+
+$homeDir = $env:USERPROFILE
+if (-not $claudeVersion -and $homeDir) {
+    try {
+        $lastUpdateFile = Join-Path $homeDir ".claude\.last-update-result.json"
+        if (Test-Path $lastUpdateFile) {
+            $upJson = Get-Content -Raw $lastUpdateFile -ErrorAction SilentlyContinue | ConvertFrom-Json
+            if ($upJson.version_to) { $claudeVersion = [string]$upJson.version_to }
+        }
+    } catch {}
+}
+
+if (-not $claudeVersion -and $env:APPDATA) {
+    try {
+        $pkgFile = Join-Path $env:APPDATA "npm\node_modules\@anthropic-ai\claude-code\package.json"
+        if (Test-Path $pkgFile) {
+            $pkgJson = Get-Content -Raw $pkgFile -ErrorAction SilentlyContinue | ConvertFrom-Json
+            if ($pkgJson.version) { $claudeVersion = [string]$pkgJson.version }
+        }
+    } catch {}
+}
+
+$versionBadge = if ($claudeVersion) { "${C_CLAUDE}claude v${claudeVersion}${RESET}" } else { "${C_CLAUDE}claude${RESET}" }
+$line2Parts += $versionBadge
 $line2 = ($line2Parts -join $C_SEP)
 
 Write-Output $line1
