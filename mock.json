@@ -1,16 +1,30 @@
 {
-  "model": "claude-3-5-sonnet-20241022",
-  "cwd": "~/projects/test",
-  "cost": {
-    "total_cost_usd": 1.25,
-    "total_duration_ms": 1500,
-    "total_lines_added": 15,
-    "total_lines_removed": 5
+  "model": {
+    "id": "claude-3-7-sonnet-20250219",
+    "display_name": "Claude 3.7 Sonnet",
+    "param_summary": "Thinking"
   },
-  "context_window": 8500,
+  "cwd": "C:\\Users\\Chawan.CHAWANNUA\\projects\\demo",
+  "cost": {
+    "total_cost_usd": 0.42,
+    "total_duration_ms": 840000,
+    "total_lines_added": 58,
+    "total_lines_removed": 13
+  },
+  "context_window": {
+    "total_input_tokens": 51200,
+    "total_output_tokens": 3400,
+    "context_window_size": 200000,
+    "used_percentage": 25.6
+  },
   "rate_limits": {
-    "five_hour": 100,
-    "seven_day": 1000,
-    "spend_limit": 50.00
+    "five_hour": {
+      "used_percentage": 62.0,
+      "resets_at": 1773289500
+    },
+    "seven_day": {
+      "used_percentage": 41.5,
+      "resets_at": 1773462300
+    }
   }
 }
