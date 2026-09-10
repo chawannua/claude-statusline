@@ -24,16 +24,38 @@ jobs:
         id: semver
         run: |
           LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "v1.0.0")
-          echo "Latest tag is $LATEST_TAG"
+          echo "Latest tag: $LATEST_TAG"
+
+          # Inspect commit messages between LATEST_TAG and HEAD
+          COMMITS=$(git log "${LATEST_TAG}..HEAD" --pretty=%B 2>/dev/null || git log -1 --pretty=%B)
+
           VERSION_NUM=${LATEST_TAG#v}
           IFS='.' read -r MAJOR MINOR PATCH <<< "$VERSION_NUM"
           MAJOR=${MAJOR:-1}
           MINOR=${MINOR:-0}
           PATCH=${PATCH:-0}
-          NEW_PATCH=$((PATCH + 1))
-          NEW_TAG="v${MAJOR}.${MINOR}.${NEW_PATCH}"
-          echo "New tag is $NEW_TAG"
+
+          if echo "$COMMITS" | grep -Eq '(BREAKING CHANGE|!:)'; then
+            NEW_MAJOR=$((MAJOR + 1))
+            NEW_MINOR=0
+            NEW_PATCH=0
+            BUMP_TYPE="major"
+          elif echo "$COMMITS" | grep -Eq '^[[:space:]]*feat(\([^\)]+\))?:'; then
+            NEW_MAJOR=$MAJOR
+            NEW_MINOR=$((MINOR + 1))
+            NEW_PATCH=0
+            BUMP_TYPE="minor"
+          else
+            NEW_MAJOR=$MAJOR
+            NEW_MINOR=$MINOR
+            NEW_PATCH=$((PATCH + 1))
+            BUMP_TYPE="patch"
+          fi
+
+          NEW_TAG="v${NEW_MAJOR}.${NEW_MINOR}.${NEW_PATCH}"
+          echo "Bumping $BUMP_TYPE -> $NEW_TAG"
           echo "new_tag=$NEW_TAG" >> "$GITHUB_OUTPUT"
+          echo "bump_type=$BUMP_TYPE" >> "$GITHUB_OUTPUT"
 
       - name: Create Release
         env:
