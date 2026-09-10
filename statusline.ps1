@@ -108,7 +108,7 @@ if ($paramText) { $summaryItems += $paramText }
 if ($effort) {
     $capEffort = (Get-Culture).TextInfo.ToTitleCase($effort.ToLower())
     if ($paramText -notmatch $capEffort) {
-        $summaryItems += "$capEffort Effort"
+        $summaryItems += $capEffort
     }
 }
 

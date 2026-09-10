@@ -4,6 +4,9 @@
     "display_name": "Claude 3.7 Sonnet",
     "param_summary": "Thinking"
   },
+  "effort": {
+    "level": "High"
+  },
   "cwd": "C:\\Users\\Chawan.CHAWANNUA\\projects\\demo",
   "cost": {
     "total_cost_usd": 0.42,
