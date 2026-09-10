@@ -5,26 +5,19 @@
 ![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20Linux%20%7C%20macOS-blue?style=flat-square)
 ![Stars](https://img.shields.io/github/stars/chawannua/claude-statusline?style=flat-square)
 
-Nordic minimalist statusline for Claude.
+Nordic minimalist statusline for Claude Code CLI with live context gauges, token reset countdowns, and quota telemetry.
 
 ## Preview
 
-```text
-~ chawannua/claude-statusline ❯ 
-```
+![Claude Statusline Preview](assets/preview.png)
 
 ## Features
 
-- Minimalist design
-- Git status integration
-- Fast and responsive
-
-## Versioning
-
-This project follows strict [Semantic Versioning](https://semver.org/) (MAJOR.MINOR.PATCH):
-- **MAJOR**: Breaking changes (e.g. `BREAKING CHANGE` or `feat!:`, `refactor!:`)
-- **MINOR**: New features (e.g. `feat:`, `feat(...):`)
-- **PATCH**: Bug fixes, refactors, docs, style (e.g. `fix:`, `refactor:`, `perf:`, `docs:`, `chore:`)
+- **Nordic Minimalist Aesthetic**: High-density typography with subtle glyphs (`◆`, `·`, `━`).
+- **Context Telemetry**: Real-time context window usage gauge with exact input/output tokens.
+- **Quota & Reset Countdowns**: Live 5-hour and 7-day rate-limit tracking with exact target reset time and relative countdown.
+- **Git Integration**: Current working directory, branch, dirty status indicator, and local fallback.
+- **Ultra Fast**: Lightweight, non-blocking execution with zero external runtime dependencies.
 
 ## Quick Install
 
@@ -35,4 +28,21 @@ Invoke-WebRequest -Uri "https://raw.githubusercontent.com/chawannua/claude-statu
 
 ## Configuration
 
-You can customize the prompt by editing the variables in `statusline.ps1`.
+Configure the statusline hook in your Claude settings (`~/.claude/settings.json`):
+
+```json
+{
+  "statusLine": {
+    "type": "command",
+    "command": "powershell -ExecutionPolicy Bypass -File C:\\Users\\Chawan.CHAWANNUA\\.claude\\statusline.ps1"
+  }
+}
+```
+
+## Versioning
+
+This project strictly follows [Semantic Versioning](https://semver.org/) (`Major.Minor.Patch`):
+
+- **Major** (`X.0.0`): Breaking changes (e.g. `BREAKING CHANGE` or `feat!:`, `refactor!:`)
+- **Minor** (`0.X.0`): New features (e.g. `feat:`, `feat(...):`)
+- **Patch** (`0.0.X`): Bug fixes, refactors, docs, style, etc. (e.g. `fix:`, `refactor:`, `perf:`, `docs:`, `chore:`)
